@@ -7,7 +7,11 @@
         frameRate:60,
         tag:'gameCanvas', //the dom element to run cocos2d on
         engineDir:'../Cocos2d-html5-v2.1.5/cocos2d/',
-        appFiles:['savannahScene.js']
+        appFiles:[
+			'menuScene.js',
+			'savannahScene.js',
+			'resources.js'		
+			]
     };
     window.addEventListener('DOMContentLoaded', function () {
         //first load engine file if specified
