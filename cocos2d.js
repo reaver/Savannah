@@ -10,6 +10,10 @@
         appFiles:[
 			'menuScene.js',
 			'savannahScene.js',
+			'map.js',
+			'tile.js',
+			'lion.js',
+			'antilope.js',
 			'resources.js'		
 			]
     };

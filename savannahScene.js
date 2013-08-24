@@ -3,7 +3,7 @@ var backgroundLayer = cc.Layer.extend({
 		this._super();
 		var s = cc.Director.getInstance().getWinSize();
 		
-		var layer = cc.LayerColor.create(new cc.Color4B(212, 172, 40, 255), s.width, s.height);
+		var layer = new map(100, 100);
         layer.setAnchorPoint(new cc.Point(0.5,0.5));
 		
 		this.addChild(layer);
