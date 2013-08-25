@@ -13,6 +13,9 @@ var LION_ID = 0;
 var ANTILOPE_ID = 1;
 var id = 1;
 
+var imageScale = 0.5;
+var size = 128 * imageScale;
+
 server.listen(port);
 console.log('Listening on port ' + port);
 
@@ -35,8 +38,12 @@ io.sockets.on('connection', function (socket) {
 	  console.log('request ended unexpectedly - NOT IMPLEMENTED');
 	}.bind(this));
 
+	socket.on("v", function(data){
+		setClientVelocity(socket, data);
+	}.bind(this));
+
 	var client = addConnection(socket);
-	setAnimal(socket);
+	setupAnimal(client);
 
 }.bind(this));
 
@@ -50,7 +57,12 @@ function addConnection(connection){
 		id: id,
 		animal: LION_ID, //Default lion
 		alive: true,
-		timestamp: new Date().getTime()
+		timestamp: new Date().getTime(),
+		x: 0,
+		y: 0,
+		vx: 0,
+		vy: 0,
+		feed: false
 	}
 	connections.push(client);
 	id++;
@@ -71,6 +83,10 @@ setInterval(function () {
   updateGameLogic();
 }, 1000/30);
 
+setInterval(function () {
+  sendUpdateMSG();
+}, 1000/3);
+
 
 function updateGameLogic(){
 	//console.log('Updating game loop');
@@ -81,36 +97,166 @@ function updateGameLogic(){
 		if(client){
 			if(client.alive){
 				var lifeleft = (client.timestamp + 10 * 1000) - currentTime;
-				console.log('Life left ' + lifeleft);
+				//console.log('Life left ' + lifeleft);
 				if(lifeleft <= 0){
 					//Die!
-					client.alive = false;
-					sendDataToSocket(client.socket, 'die', 'yolo');
+					kill(client);
+				}else{
+					updatePosition(client);
 				}
 			}
 		}else{
 			console.log('Client is null');
 		}
 	}
+	var clientOne, clientTwo;
+	for(var i = 0; i < connections.length; i++){
+		clientOne = connections[i];
+		for(var j = 0; j < connections.length; j++){
+			clientTwo = connections[j];
+			checkCollision(clientOne, clientTwo);
+		}
+	}
 }
 
-function setAnimal(socket){
+function sendUpdateMSG(){
+	var updatemsg = [];
+	for(var i = 0; i < connections.length; i++){
+		var client = connections[i];
+		if(client){
+			updatemsg.push(createPlayerArray(client));
+		}
+	}
+	for(var i = 0; i < connections.length; i++){
+		var client = connections[i];
+		if(client){
+			sendDataToSocket(client.socket, 'u', updatemsg);
+		}
+	}
+	//console.log('sending update');
+	//console.log(updatemsg);
+}
+
+function setClientVelocity(socket, data){
+	for(var i = 0; i < connections.length; i++){
+		var connectionInArray = connections[i];
+		if(connectionInArray.socket == socket){
+			connectionInArray.vx = data.vx;
+			connectionInArray.vy = data.vy;
+			break;
+		}
+	}
+}
+
+function createPlayerArray(client){
+	var array = [];
+	array.push(client.id);
+	array.push(client.animal);
+	array.push(minimize(client.x));
+	array.push(minimize(client.y));
+	array.push(minimize(client.vx));
+	array.push(minimize(client.vy));
+	return array;
+}
+
+function minimize(number){
+	return Math.round(number * 100) / 100;
+}
+
+function kill(client){
+	client.alive = false;
+	sendDataToSocket(client.socket, 'die', 'yolo');
+	if(client.animal == LION_ID){
+		numberOfLions--;
+	}else if(client.animal == ANTILOPE_ID){
+		numberOfAntilopes--;
+	}
+}
+
+function feed(client){
+	client.feed = true;
+	sendDataToSocket(client.socket, 'feed', 'yumyum');
+}
+
+function mate(clientOne, clientTwo){
+	//Setup new animal
+	//Kill old one
+}
+
+function updatePosition(client){
+	client.x += client.vx;
+	client.y += client.vy;
+}
+
+function checkCollision(clientOne, clientTwo){
+	if(clientOne.id != clientTwo.id){
+		if(clientOne.alive && clientTwo.alive){
+			if(clientOne.animal != clientTwo.animal){
+				//console.log('Checking collision');
+				//Check if colliding
+				if(collides(clientOne, clientTwo)){
+					console.log('Client[' + clientOne.id + "] " + clientOne.animal + ' eatcollision with Client[' + clientTwo.id + "] " + clientTwo.animal);
+		    		if(clientOne.animal == ANTILOPE_ID){
+		    			kill(clientOne);
+		    			feed(clientTwo);
+		    		}else if(clientTwo.animal == ANTILOPE_ID){
+		    			kill(clientTwo);
+		    			feed(clientOne);
+		    		}
+				}
+			}else{
+				if(clientOne.feed && clientTwo.feed){
+					if(collides(clientOne, clientTwo)){
+						console.log('Client[' + clientOne.id + "] " + clientOne.animal + ' matecollision with Client[' + clientTwo.id + "] " + clientTwo.animal);
+			    		mate(clientOne, clientTwo);
+					}
+				}
+			}
+		}
+	}
+}
+
+function collides(clientOne, clientTwo){
+	if(clientTwo.x - (size / 2) < clientOne.x + (size / 2) && clientTwo.x + (size / 2) > clientOne.x - (size / 2)){
+        if(clientTwo.y - (size / 2) < clientOne.y + (size / 2) && clientTwo.y + (size / 2) > clientOne.y - (size / 2)){
+          	return true;
+    	}
+  	}
+  	return false;
+}
+
+function getStartPosition(){
+	return { x: Math.random()*100-50, y: Math.random()*100-50};
+}
+
+function setupAnimal(client){
 	if(numberOfLions == numberOfAntilopes){
 		//Randomize!
 		var randomNumber = Math.random();
 		if(randomNumber < 0.5){
 			//Lion!
-			socket.animal = LION_ID;
+			client.animal = LION_ID;
+			numberOfLions++;
 		}else{
 			//Antilope!
-			socket.animal = ANTILOPE_ID;
+			client.animal = ANTILOPE_ID;
+			numberOfAntilopes++;
 		}
 	}else if(numberOfLions < numberOfAntilopes){
 		//Lion!
-		socket.animal = LION_ID;
+		client.animal = LION_ID;
+		numberOfLions++;
 	}else if(numberOfLions > numberOfAntilopes){
 		//Antilope!
-		socket.animal = ANTILOPE_ID;
+		client.animal = ANTILOPE_ID;
+		numberOfAntilopes++;
 	}
-	sendDataToSocket(socket, 'animalID', socket.animal);
+
+	var startPosition = getStartPosition();
+	console.log('Start position ' + startPosition.x + ' ' + startPosition.y);
+	client.x = startPosition.x;
+	client.y = startPosition.y;
+
+	var msg = { id: client.id, aid: client.animal, x: client.x, y: client.y}
+	sendDataToSocket(client.socket, 'setup', msg);
 }
