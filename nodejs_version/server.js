@@ -4,7 +4,14 @@ var express = require('express')
 	, io = require('socket.io').listen(server, { log: false });	
 
 var port = 8080;
+
 var connections = [];
+var numberOfLions = 0;
+var numberOfAntilopes = 0;
+
+var LION_ID = 0;
+var ANTILOPE_ID = 1;
+var id = 1;
 
 server.listen(port);
 console.log('Listening on port ' + port);
@@ -28,7 +35,8 @@ io.sockets.on('connection', function (socket) {
 	  console.log('request ended unexpectedly - NOT IMPLEMENTED');
 	}.bind(this));
 
-	addConnection(socket);
+	var client = addConnection(socket);
+	setAnimal(socket);
 
 }.bind(this));
 
@@ -37,7 +45,15 @@ function sendDataToSocket(socket, keyword, data){
 }
 
 function addConnection(connection){
-	connections.push(connection);
+	var client = {
+		socket: connection,
+		id: id,
+		animal: LION_ID, //Default lion
+		timestamp: new Date().getMilliseconds()
+	}
+	connections.push(client);
+	id++;
+	return client;
 }
 
 function removeConnection(connection){
@@ -57,4 +73,25 @@ setInterval(function () {
 
 function updateGameLogic(){
 	//console.log('Updating game loop');
+}
+
+function setAnimal(socket){
+	if(numberOfLions == numberOfAntilopes){
+		//Randomize!
+		var randomNumber = Math.random();
+		if(randomNumber < 0.5){
+			//Lion!
+			socket.animal = LION_ID;
+		}else{
+			//Antilope!
+			socket.animal = ANTILOPE_ID;
+		}
+	}else if(numberOfLions < numberOfAntilopes){
+		//Lion!
+		socket.animal = LION_ID;
+	}else if(numberOfLions > numberOfAntilopes){
+		//Antilope!
+		socket.animal = ANTILOPE_ID;
+	}
+	sendDataToSocket(socket, 'animalID', socket.animal);
 }
