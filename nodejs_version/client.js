@@ -17,8 +17,12 @@ $(document).ready(function(){
 	socket = io.connect(connectTo);
 
 	socket.on("animalID", function(data) {
-	  	console.log('Data ' + data);
+	  	console.log('Data: ' + data);
 		animalID = data;
+	}.bind(this));
+	
+	socket.on("die", function(data) {
+	  	console.log('Data: ' + data);
 	}.bind(this));
 	
 	canvas = document.getElementById('gamescreen');
