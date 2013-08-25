@@ -3,8 +3,12 @@ var socket;
 var canvas;
 var canvasContext;
 var canvasStage;
+
+//SpriteSheets
 var lionSpriteSheet;
 var antilopeSpriteSheet;
+
+//SpriteSheet controlls.
 var animalID;
 
 $(document).ready(function(){
@@ -45,6 +49,13 @@ function renderBackground(){
 	canvasContext.fillRect(0,0,canvas.width,canvas.height);
 }
 
-function renderPlayer(){
+function renderPlayer(spriteID){
+	var x = canvas.width/2 - lionSpriteSheet.width/2;
+	var y = canvas.height/2 - lionSpriteSheet.height/2;	
 	
+}
+
+function render(){
+	renderBackground();
+	renderPlayer(animalID);
 }
