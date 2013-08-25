@@ -140,22 +140,27 @@ function sendUpdateMSG(){
 function setClientVelocity(socket, data){
 	for(var i = 0; i < connections.length; i++){
 		var connectionInArray = connections[i];
-		if(connectionInArray.socket == socket){
-			connectionInArray.vx = data.vx;
-			connectionInArray.vy = data.vy;
-			break;
+		if(connectionInArray.alive){
+			if(connectionInArray.socket == socket){
+				//console.log("Got new speed: " + data.vx + " " + data.vy);
+				connectionInArray.vx = data.vx;
+				connectionInArray.vy = data.vy;
+				break;
+			}
 		}
 	}
 }
 
 function createPlayerArray(client){
-	var array = [];
-	array.push(client.id);
-	array.push(client.animal);
-	array.push(minimize(client.x));
-	array.push(minimize(client.y));
-	array.push(minimize(client.vx));
-	array.push(minimize(client.vy));
+	var array = {
+		id:(client.id),
+		animal:(client.animal),
+		x:(minimize(client.x)),
+		y:(minimize(client.y)),
+		vx:(minimize(client.vx)),
+		vy:(minimize(client.vy))
+	};
+	
 	return array;
 }
 
@@ -165,7 +170,10 @@ function minimize(number){
 
 function kill(client){
 	client.alive = false;
-	sendDataToSocket(client.socket, 'die', 'yolo');
+	client.vx = 0;
+	client.vy = 0;
+	var diemsg = { id: client.id, source:0};
+	sendDataToSocket(client.socket, 'die', diemsg);
 	if(client.animal == LION_ID){
 		numberOfLions--;
 	}else if(client.animal == ANTILOPE_ID){
@@ -184,8 +192,10 @@ function mate(clientOne, clientTwo){
 }
 
 function updatePosition(client){
-	client.x += client.vx;
-	client.y += client.vy;
+	//console.log("Before" + client.x + " " + client.y);
+	client.x += client.vx*10;
+	client.y += client.vy*10;
+	//console.log("After" + client.x + " " + client.y);
 }
 
 function checkCollision(clientOne, clientTwo){
@@ -226,7 +236,7 @@ function collides(clientOne, clientTwo){
 }
 
 function getStartPosition(){
-	return { x: Math.random()*100-50, y: Math.random()*100-50};
+	return { x: Math.random()*1000-500, y: Math.random()*1000-500};
 }
 
 function setupAnimal(client){

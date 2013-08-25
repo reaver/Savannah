@@ -1,6 +1,9 @@
 var socket;
 var g;
 
+var LIONID = 0;
+var ANTILOPEID = 1;
+
 var canvas;
 var canvasContext;
 var canvasStage;
@@ -28,7 +31,8 @@ var animalID;
 var x;
 var y;
 var ID;
-var playerSpeed;
+var vx;
+var vy;
 
 var players = {};
 
@@ -48,15 +52,16 @@ $(document).ready(function(){
 		ID = data.id;
 		x = data.x;
 		y = data.y;
-		createPlayer();
+		vx = data.vx;
+		vy = data.vy;
 	}.bind(this));
 	
 	socket.on("die", function(data) {
 	  	console.log('Data: ' + data);
+		die(data);
 	}.bind(this));
 	
 	socket.on("u", function(data) {
-	  	console.log('Data: ' + data);
 		update(data);
 	}.bind(this));
 	
@@ -65,7 +70,6 @@ $(document).ready(function(){
 	canvasStage = new createjs.Stage(document.getElementById("gamescreen"));
 
 	setup();
-	render();
 	
 });
 
@@ -80,7 +84,35 @@ function setup(){
 	createSpriteSheets(animalID);
 	setupAnimations();
 	
+	canvas.addEventListener('mousemove', function(evt) {
+        var mousePos = getMousePos(canvas, evt);
+        
+		var deltaX = mousePos.x - canvas.width/2;
+		var deltaY = mousePos.y - canvas.height/2;
+		
+		var len = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+		
+		deltaX = deltaX/len;
+		deltaY = deltaY/len;
+		
+		var speedVect = {};
+		
+		speedVect.vx = -deltaX;
+		speedVect.vy = -deltaY;
+	
+		sendDataToServer("v", speedVect);
+		
+    }, false);
+	
 	//createPlayer();
+}
+
+function getMousePos(canvas, evt) {
+	var rect = canvas.getBoundingClientRect();
+	return {
+	  x: evt.clientX - rect.left,
+	  y: evt.clientY - rect.top
+	};
 }
 
 function setupAnimations(){
@@ -88,13 +120,13 @@ function setupAnimations(){
 	createjs.Ticker.addListener(window);
 	createjs.Ticker.useRAF = true;
 	// Best Framerate targeted (60 FPS)
-	createjs.Ticker.setFPS(60);
+	createjs.Ticker.setFPS(30);
 }
 
 function tick() {
 	//render();
 	//renderPlayer();
-	updatePlayer();
+	updateLocal();
     // update the stage:
     canvasStage.update();
 }
@@ -113,12 +145,6 @@ function createSpriteSheets(id){
 	createLionSpriteSheet();
 	createAntilopeSpriteSheet();
 	
-	if (id == 0) {
-		playerSprite = bmpLionAnimation;
-	}
-	else {
-		playerSprite = bmpAntilopeAnimation;
-	}
 }
 
 function createLionSpriteSheet(){
@@ -136,8 +162,6 @@ function createLionSpriteSheet(){
           //water: [32, 33, "water", 30]
       }
   });
-  
-  bmpLionAnimation = new createjs.BitmapAnimation(lionSpriteSheet);
   
   //lionSpriteSheet.img.gotoAndPlay("attack");
 
@@ -158,11 +182,14 @@ function createAntilopeSpriteSheet(){
           //water: [32, 33, "water", 30]
       }
   });
-  
-  bmpAntilopeAnimation = new createjs.BitmapAnimation(antilopeSpriteSheet);
-  
   //antilopeSpriteSheet.img.gotoAndPlay("attack");
 
+}
+
+function createSprite(spriteSheet){
+ 
+  return new createjs.BitmapAnimation(spriteSheet);
+ 
 }
 
 function createBackground(){
@@ -175,58 +202,121 @@ function createBackground(){
 	canvasStage.addChild(shape);
 }
 
-function createPlayer(){
-	var x = canvas.width/2;
-	var y = canvas.height/2;	
+function createPlayer(player){
+	//var x = canvas.width/2;
+	//var y = canvas.height/2;
 	
-	playerSprite.x = x;
-	playerSprite.y = y;
-	playerSprite.scaleX = scale;
-	playerSprite.scaleY = scale;
+	var sprite;
 	
-	playerSprite.gotoAndPlay("run")
+	if (player.animal == LIONID) {
+		sprite = createSprite(lionSpriteSheet);
+	}else{
+		sprite = createSprite(antilopeSpriteSheet);
+	}
 	
-	canvasStage.addChild(playerSprite);
+	if (player.id == ID) {
+	
+		var x = canvas.width/2;
+		var y = canvas.height/2;
+		
+		sprite.x = x;
+		sprite.y = y;
+	
+		playerSprite = sprite;
+	}
+	else{
+		sprite.x = player.x;
+		sprite.y = player.y;
+	}
+	sprite.scaleX = scale;
+	sprite.scaleY = scale;
+	
+	sprite.gotoAndPlay("run")
+	
+	player.sprite = sprite;
+	
+	canvasStage.addChild(sprite);
+}
+
+function die(data){
+	var player = players[data.id];
+	if(player){
+		player.vx = 0;
+		player.vy = 0;
+	}
 }
 
 function updatePlayer(data){
-	
-	var id = data[0];
+	var id = data.id;
 	
 	if (!players[id]){
 	
 		var player = {
-			id: data[0],
-			animal: data[1],
-			x = relativeX(data[2]),
-			y = relativeY(data[3])
+			id:data.id,
+			animal:data.animal,
+			x:relativeX(data.x),
+			y:relativeY(data.y)
 		}
 		players[player.id] = player;
 		createPlayer(player);
 	}
 	
-	players[id].x = relativeX(data[2]);
-	players[id].y = relativeY(data[3]);
-	players[id].vx = data[4];
-	players[id].vy = data[5];
+	players[id].sprite.x = relativeX(data.x);
+	players[id].sprite.y = relativeY(data.y);
+	players[id].vx = data.vx;
+	players[id].vy = data.vy;
+	
+	if(id == ID){
+		x = data.x;
+		y = data.y;
+		players[id].sprite.x = 400;//canvas.width/2;
+		players[id].sprite.y = 240;//canvas.heigth/2;
+	}
 	
 }
 
 function update(data){
-	for(int i = 0; i<data.length;i++){
+	for(var i = 0; i < data.length;i++){
 		var player = data[i];
-		updatePlayer(player);
+		if (player) {
+			updatePlayer(player);
+		}
 	}
 }
 
-function render(){
-	//renderBackground();
+function updateLocal(){
+	var myplayer = players[ID];
+	if (myplayer) {
+		//x = x + myplayer.vx*10;
+		//y = y + myplayer.vy*10;
+		
+		//myplayer.sprite.x = 400;//canvas.width/2;
+		//myplayer.sprite.y = 240;//canvas.heigth/2;
+	}
+	console.log('player speed ' + myplayer.vx + ' ' + myplayer.vy);
+	for(var key in players){
+		var player = players[key];
+		if (player) {
+			console.log("SWAG")
+			if(player.id != ID){
+				/*
+				var absoluteX = (x + player.sprite.x) + player.vx*10;
+				var absoluteY = (y + player.sprite.y) + player.vy*10;
+				player.sprite.x = relativeX(absoluteX);
+				player.sprite.y = relativeY(absoluteY);	
+				*/
+				
+				player.sprite.x += myplayer.vx*10;
+				player.sprite.y += myplayer.vy*10;
+			}
+		}
+	}
 }
 
 function relativeX(otherX){
-	return x - otherX;
+	return canvas.width/2 + (x - otherX);
 }
 
 function relativeY(otherY){
-	return y - otherY;
+	return canvas.height/2 + (y - otherY);
 }
