@@ -155,10 +155,10 @@ function createLionSpriteSheet(){
       // width, height & registration point of each sprite
       frames: {width: 128, height: 128, regX: 64, regY: 64}, 
       animations: {    
-          run: [0, 0, "run", 10]
-          //attack: [8, 15, "attack", 5],
-          //idle: [16, 17, "idle", 50],
-          //die: [24, 31, "die", 10],
+          left: [0, 3, "left", 3],
+          right: [4, 7, "right", 3],
+          up: [8, 11, "up", 3],
+          down: [12, 15, "down", 3]
           //water: [32, 33, "water", 30]
       }
   });
@@ -287,17 +287,41 @@ function update(data){
 function updateLocal(){
 	var myplayer = players[ID];
 	if (myplayer) {
+		var vx = myplayer.vx;
+		var vy = myplayer.vy;
+		if(Math.abs(vx) > Math.abs(vy)){
+			if(vx > 0){
+				if(myplayer.sprite.currentAnimation !== 'left'){
+					myplayer.sprite.gotoAndPlay('left');
+				}
+			}else{
+				if(myplayer.sprite.currentAnimation !== 'right'){
+					myplayer.sprite.gotoAndPlay('right');
+				}
+			}
+		}else{
+			if(vy > 0){
+				if(myplayer.sprite.currentAnimation !== 'up'){
+					myplayer.sprite.gotoAndPlay('up');
+				}
+				
+			}else{
+				if(myplayer.sprite.currentAnimation !== 'down'){
+					myplayer.sprite.gotoAndPlay('down');
+				}
+				
+			}
+		}
 		//x = x + myplayer.vx*10;
 		//y = y + myplayer.vy*10;
 		
 		//myplayer.sprite.x = 400;//canvas.width/2;
 		//myplayer.sprite.y = 240;//canvas.heigth/2;
 	}
-	console.log('player speed ' + myplayer.vx + ' ' + myplayer.vy);
+	//console.log('player speed ' + myplayer.vx + ' ' + myplayer.vy);
 	for(var key in players){
 		var player = players[key];
 		if (player) {
-			console.log("SWAG")
 			if(player.id != ID){
 				/*
 				var absoluteX = (x + player.sprite.x) + player.vx*10;
