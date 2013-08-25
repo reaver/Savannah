@@ -49,7 +49,8 @@ function addConnection(connection){
 		socket: connection,
 		id: id,
 		animal: LION_ID, //Default lion
-		timestamp: new Date().getMilliseconds()
+		alive: true,
+		timestamp: new Date().getTime()
 	}
 	connections.push(client);
 	id++;
@@ -73,6 +74,24 @@ setInterval(function () {
 
 function updateGameLogic(){
 	//console.log('Updating game loop');
+	var currentTime = new Date().getTime();
+
+	for(var i = 0; i < connections.length; i++){
+		var client = connections[i];
+		if(client){
+			if(client.alive){
+				var lifeleft = (client.timestamp + 10 * 1000) - currentTime;
+				console.log('Life left ' + lifeleft);
+				if(lifeleft <= 0){
+					//Die!
+					client.alive = false;
+					sendDataToSocket(client.socket, 'die', 'yolo');
+				}
+			}
+		}else{
+			console.log('Client is null');
+		}
+	}
 }
 
 function setAnimal(socket){
