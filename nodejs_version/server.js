@@ -131,7 +131,7 @@ function updateGameLogic(){
 		var client = connections[i];
 		if(client){
 			if(client.alive){
-				var lifeleft = (client.timestamp + 10 * 10000) - currentTime;
+				var lifeleft = (client.timestamp + 10 * 1000) - currentTime;
 				//console.log('Life left ' + lifeleft);
 				if(lifeleft <= 0){
 					//Die!
@@ -309,7 +309,7 @@ function collides(clientOne, clientTwo){
 }
 
 function getStartPosition(){
-	return { x: Math.random()*1000-500, y: Math.random()*1000-500};
+	return { x: Math.random()*750-500, y: Math.random()*750-500};
 }
 
 function setupAnimal(client){
@@ -318,7 +318,7 @@ function setupAnimal(client){
 		var randomNumber = Math.random();
 		if(randomNumber < 0.5){
 			//Lion!
-			client.animal = ANTILOPE_ID;
+			client.animal = LION_ID;
 			numberOfLions++;
 		}else{
 			//Antilope!
@@ -327,7 +327,7 @@ function setupAnimal(client){
 		}
 	}else if(numberOfLions < numberOfAntilopes){
 		//Lion!
-		client.animal = ANTILOPE_ID;
+		client.animal = LION_ID;
 		numberOfLions++;
 	}else if(numberOfLions > numberOfAntilopes){
 		//Antilope!
