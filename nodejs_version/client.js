@@ -53,6 +53,13 @@ var guiContainer;
 var ingame = false;
 var timeloaded;
 
+var map;
+$.getJSON( "map.json", function( json ) {
+	console.log('json done');
+   	map = json;
+   	loadMap();
+});
+
 $(document).ready(function(){
 	
 	canvas = document.getElementById('gamescreen');
@@ -286,11 +293,20 @@ function createBackground(){
 	
 	//background = new createjs.Rectangle(0, 0, canvas.width, canvas.height);
 	backgroundContainer.addChild(shape);
+}
 
-	var tree = new createjs.BitmapAnimation(objectsSpriteSheet);
-	tree.gotoAndPlay("tree");
-	objectContainer.addChild(tree);
-	objects.push(tree);
+function loadMap(){
+	for(var i = 0; i < map.length; i++){
+		var def = map[i];
+		if(def){
+			var tree = new createjs.BitmapAnimation(objectsSpriteSheet);
+			tree.gotoAndPlay(def.type);
+			tree.x = def.x;
+			tree.y = def.y;
+			objectContainer.addChild(tree);
+			objects.push(tree);
+		}
+	}
 }
 
 function createLogo(){

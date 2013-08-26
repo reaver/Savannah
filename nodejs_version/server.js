@@ -35,6 +35,10 @@ app.get('/', function (req, res) {
   res.sendfile(__dirname + '/index.html');
 });
 
+app.get('/map.json', function (req, res) {
+  res.sendfile(__dirname + '/map.json');
+});
+
 io.sockets.on('connection', function (socket) {
 	console.log('Got conenction!');
 
