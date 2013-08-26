@@ -51,6 +51,9 @@ var guiContainer;
 var ingame = false;
 var timeloaded;
 
+//Control
+var mouseIsDown = false;
+
 $(document).ready(function(){
 	
 	canvas = document.getElementById('gamescreen');
@@ -114,24 +117,34 @@ function setup(){
 
 	loadImages();
 	
-	canvas.addEventListener('mousemove', function(evt) {
-        var mousePos = getMousePos(canvas, evt);
-        
-		var deltaX = mousePos.x - canvas.width/2;
-		var deltaY = mousePos.y - canvas.height/2;
-		
-		var len = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
-		
-		deltaX = deltaX/len;
-		deltaY = deltaY/len;
-		
-		var speedVect = {};
-		
-		speedVect.vx = -deltaX;
-		speedVect.vy = -deltaY;
+	$(document).bind('mousedown', function mouseDown(evt){
+		mouseIsDown = true;
+		console.log("Mouse down " + evt);
+	}, false);
 	
-		sendDataToServer("v", speedVect);
+	$(document).bind('mouseup', function mouseUp(evt){
+		mouseIsDown = false;
+		console.log("Mouse up " + evt);
+	}, false);
+	
+	$(document).bind('mousemove', function(evt) {
+        var mousePos = getMousePos(canvas, evt);
+        if(mouseIsDown) {
+			var deltaX = mousePos.x - canvas.width/2;
+			var deltaY = mousePos.y - canvas.height/2;
+			
+			var len = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+			
+			deltaX = deltaX/len;
+			deltaY = deltaY/len;
+			
+			var speedVect = {};
+			
+			speedVect.vx = -deltaX;
+			speedVect.vy = -deltaY;
 		
+			sendDataToServer("v", speedVect);
+		}
     }, false);
     
 	
@@ -145,6 +158,12 @@ function getMousePos(canvas, evt) {
 	  y: evt.clientY - rect.top
 	};
 }
+
+function mouseButtonToggle(){
+}
+
+
+
 
 function setupAnimations(){
 
