@@ -213,12 +213,40 @@ function createBackground(){
 function createLogo(){
 	var bitmap = new createjs.Bitmap(logoImage);
 	bitmap.x = 400 - 512/2;
-	bitmap.y = 240 - 512/2;
+	bitmap.y = 240 - 512/2 - 30;
 	canvasStage.addChild(bitmap);
 	var pressany = new createjs.Bitmap(pressanyImage);
 	pressany.x = 400 - 256/2;
 	pressany.y = 240 - 256/2 + 175;
+	pressany.alpha = 0;
 	canvasStage.addChild(pressany);
+
+	setTimeout(function() {
+    	fade(pressany, 0, true, true);
+	}, 25);
+}
+
+function fade(image, value, fadeIn, loop){
+	image.alpha = value;
+	var done = false;
+	if(fadeIn){
+		value += 1/30;
+		if(value >= 1){
+			fadeIn = false;
+			done = true;
+		}
+	}else{
+		value -= 1/30;
+		if(value <= 0){
+			fadeIn = true;
+			done = true;
+		}
+	}
+	if(!done || loop){
+		setTimeout(function() {
+	    	fade(image, value, fadeIn, loop);
+		}, 25);
+	}
 }
 
 function createPlayer(player){
