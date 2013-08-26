@@ -13,6 +13,8 @@ var lionSpriteSheetImage;
 var antilopeSpriteSheetImage;
 var treeImage;
 var grassImage;
+var logoImage;
+var pressanyImage;
 
 var lionSpriteSheet;
 var antilopeSpriteSheet;
@@ -81,6 +83,7 @@ function setup(){
 	g = new createjs.Graphics();
 	loadImages();
 	createBackground();
+	createLogo();
 	createSpriteSheets(animalID);
 	setupAnimations();
 	
@@ -136,6 +139,11 @@ function loadImages(){
 	lionSpriteSheetImage.src = 'lion.png';
 	antilopeSpriteSheetImage = new Image();
 	antilopeSpriteSheetImage.src = 'antilope.png';
+
+	logoImage = new Image();
+	logoImage.src = 'logo.png';
+	pressanyImage = new Image();
+	pressanyImage.src = 'pressanykey.png';
 	//lionSpriteSheet.image.onload = function(){
     //	console.log('Loaded lionSpriteSheet');
   	//}
@@ -200,6 +208,17 @@ function createBackground(){
 	
 	//background = new createjs.Rectangle(0, 0, canvas.width, canvas.height);
 	canvasStage.addChild(shape);
+}
+
+function createLogo(){
+	var bitmap = new createjs.Bitmap(logoImage);
+	bitmap.x = 400 - 512/2;
+	bitmap.y = 240 - 512/2;
+	canvasStage.addChild(bitmap);
+	var pressany = new createjs.Bitmap(pressanyImage);
+	pressany.x = 400 - 256/2;
+	pressany.y = 240 - 256/2;
+	canvasStage.addChild(pressany);
 }
 
 function createPlayer(player){
