@@ -440,14 +440,29 @@ function updatePlayer(data){
 		createPlayer(player);
 	}
 	
-	players[id].sprite.x = relativeX(data.x);
-	players[id].sprite.y = relativeY(data.y);
+	var localPosX = players[id].x;
+	var localPosY = players[id].y;
+	
+	var diffX = localPosX - relativeX(data.x);
+	var diffY = localPosY - relativeY(data.y);
+	
+	var catchUpX = diffX/3;
+	var catchUpY = diffY/3;
+	
+	//console.log("data.vx " + data.vx + " " + "data.vy" + data.vy + " catchUpX " + catchUpX + " catchUpY " + catchUpY);
 	players[id].vx = data.vx;
 	players[id].vy = data.vy;
 	
+	//players[id].x += data.vx*10;
+	//players[id].y += data.vy*10;
+	
+	//Update sprite position.
+	players[id].sprite.x = players[id].x;
+	players[id].sprite.y = players[id].y;
+	
 	if(id == ID){
-		x = data.x;
-		y = data.y;
+		//x = data.x;
+		//y = data.y;
 		players[id].sprite.x = 400;//canvas.width/2;
 		players[id].sprite.y = 240;//canvas.heigth/2;
 	}
@@ -516,9 +531,11 @@ function updateLocal(){
 				player.sprite.x = relativeX(absoluteX);
 				player.sprite.y = relativeY(absoluteY);	
 				*/
-				player.sprite.x += myplayer.vx*10;
-				player.sprite.y += myplayer.vy*10;
+				player.x += myplayer.vx*10 + player.vx*10;
+				player.y += myplayer.vy*10 + player.vy*10 ;
 				animate(player);
+				player.sprite.x = player.x;
+				player.sprite.y = player.y;
 			}
 		}
 	}

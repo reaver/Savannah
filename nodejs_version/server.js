@@ -146,7 +146,7 @@ function sendUpdateMSG(){
 	var updatemsg = [];
 	for(var i = 0; i < connections.length; i++){
 		var client = connections[i];
-		if(client){
+		if(client  && client.alive){
 			updatemsg.push(createPlayerArray(client));
 		}
 	}
