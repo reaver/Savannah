@@ -42,17 +42,27 @@ var vx;
 var vy;
 
 var players = {};
+var objects = [];
 
 //Rendering
 var backgroundContainer;
 var playerContainer;
+var objectContainer;
 var guiContainer;
 
 var ingame = false;
 var timeloaded;
 
+
 //Control
 var mouseIsDown = false;
+
+var map;
+$.getJSON( "map.json", function( json ) {
+	console.log('json done');
+   	map = json;
+   	loadMap();
+});
 
 $(document).ready(function(){
 	
@@ -61,7 +71,6 @@ $(document).ready(function(){
 	canvasStage = new createjs.Stage(document.getElementById("gamescreen"));
 
 	setup();
-	console.log('setup done');
 	
 	$(document).bind('keyup',function(e){
         //console.log('Time ' + timeloaded + "/" + (new Date().getTime()) + " = " + ());
@@ -112,6 +121,8 @@ function setup(){
 	canvasStage.addChild(backgroundContainer);
 	playerContainer = new createjs.Container();
 	canvasStage.addChild(playerContainer);
+	objectContainer = new createjs.Container();
+	canvasStage.addChild(objectContainer);
  	guiContainer = new createjs.Container();
  	canvasStage.addChild(guiContainer);
 
@@ -186,7 +197,6 @@ function loadImages(){
 	lionSpriteSheetImage.src = 'lion.png';
 	numberOfImages++;
 	lionSpriteSheetImage.onload = function() {
-    	console.log(lionSpriteSheetImage);
     	preloadStatus();
   	};
 
@@ -194,7 +204,6 @@ function loadImages(){
 	antilopeSpriteSheetImage.src = 'antilope.png';
 	numberOfImages++;
 	antilopeSpriteSheetImage.onload = function() {
-    	console.log(lionSpriteSheetImage);
     	preloadStatus();
   	};
 
@@ -202,7 +211,6 @@ function loadImages(){
 	objectsSpriteSheetImage.src = 'objects.png';
 	numberOfImages++;
 	objectsSpriteSheetImage.onload = function() {
-    	console.log(objectsSpriteSheetImage);
     	preloadStatus();
   	};
 
@@ -210,7 +218,6 @@ function loadImages(){
 	logoImage.src = 'logo.png';
 	numberOfImages++;
 	logoImage.onload = function() {
-    	console.log(logoImage);
     	preloadStatus();
   	};
 
@@ -218,21 +225,8 @@ function loadImages(){
 	pressanyImage.src = 'pressanykey.png';
 	numberOfImages++;
 	pressanyImage.onload = function() {
-    	console.log(pressanyImage);
     	preloadStatus();
   	};
-}
-
-function loadImage(img, source){
-	console.log('loading ' + source);
-	img = new Image();
-	img.src = source;
-	numberOfImages++;
-	img.onload = function() {
-    	console.log(img);
-    	preloadStatus();
-  	};
-	return img;
 }
 
 function preloadStatus(){
@@ -258,7 +252,6 @@ function createSpriteSheets(){
 
 function createLionSpriteSheet(){
 	//example code:
-	console.log('lion pre');
 	lionSpriteSheet = new createjs.SpriteSheet({
       // image to use
       images: [lionSpriteSheetImage], 
@@ -272,7 +265,6 @@ function createLionSpriteSheet(){
           //water: [32, 33, "water", 30]
       }
   });
-  console.log('lion post');
   //lionSpriteSheet.img.gotoAndPlay("attack");
 
 }
@@ -296,13 +288,14 @@ function createAntilopeSpriteSheet(){
 }
 
 function createObjectsSpriteSheet(){
-	console.log('Creating objects ss');
 	objectsSpriteSheet = new createjs.SpriteSheet({
       images: [objectsSpriteSheetImage], 
       frames: [
-      	[0,0,256,256,128,128]
+      	[0,0,256,256, 0,128,128]
       ],
-      animations: {}
+      animations: {
+      	tree: [0, 0, "tree", 30]
+      }
   });
 }
 
@@ -320,9 +313,20 @@ function createBackground(){
 	
 	//background = new createjs.Rectangle(0, 0, canvas.width, canvas.height);
 	backgroundContainer.addChild(shape);
+}
 
-	treeImage = objectsSpriteSheet.getFrame(0);
-	//backgroundContainer.addChild(treeImage);
+function loadMap(){
+	for(var i = 0; i < map.length; i++){
+		var def = map[i];
+		if(def){
+			var tree = new createjs.BitmapAnimation(objectsSpriteSheet);
+			tree.gotoAndPlay(def.type);
+			tree.x = def.x;
+			tree.y = def.y;
+			objectContainer.addChild(tree);
+			objects.push(tree);
+		}
+	}
 }
 
 function createLogo(){
@@ -330,9 +334,9 @@ function createLogo(){
 	bitmap.x = 400 - 512/2;
 	bitmap.y = 240 - 512/2 - 30;
 	guiContainer.addChild(bitmap);
-	var frame = objectsSpriteSheet.getFrame(0);
-	console.log(frame);
-	var pressany = new createjs.Bitmap(pressanyImage);
+
+	var imgaa = new Image(objectsSpriteSheet.getFrame(0).img);
+	var pressany = new createjs.Bitmap(imgaa);
 	pressany.x = 400 - 256/2;
 	pressany.y = 240 - 256/2 + 175;
 	pressany.alpha = 0;
@@ -515,6 +519,13 @@ function updateLocal(){
 				player.sprite.y += myplayer.vy*10;
 				animate(player);
 			}
+		}
+	}
+	for(var i = 0; i < objects.length; i++){
+		var object = objects[i];
+		if(object){
+			object.x += myplayer.vx*10; 
+			object.y += myplayer.vy*10;
 		}
 	}
 }
