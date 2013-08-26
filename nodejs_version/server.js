@@ -30,6 +30,10 @@ app.get('/', function (req, res) {
 io.sockets.on('connection', function (socket) {
 	console.log('Got conenction!');
 
+	socket.on("spawn", function() {
+	  setupAnimal(getClient(socket));
+	}.bind(this));
+
 	socket.on("close", function() {
 	  	console.log('request closed unexpectedly - NOT IMPLEMENTED');
 	}.bind(this));
@@ -42,9 +46,7 @@ io.sockets.on('connection', function (socket) {
 		setClientVelocity(socket, data);
 	}.bind(this));
 
-	var client = addConnection(socket);
-	setupAnimal(client);
-
+	addConnection(socket);
 }.bind(this));
 
 function sendDataToSocket(socket, keyword, data){
@@ -54,7 +56,7 @@ function sendDataToSocket(socket, keyword, data){
 function addConnection(connection){
 	var client = {
 		socket: connection,
-		id: id,
+		id: 0,
 		animal: LION_ID, //Default lion
 		alive: true,
 		timestamp: new Date().getTime(),
@@ -65,8 +67,17 @@ function addConnection(connection){
 		feed: false
 	}
 	connections.push(client);
-	id++;
 	return client;
+}
+
+function getClient(socket){
+	for(var i = 0; i < connections.length; i++){
+		var connectionInArray = connections[i];
+		if(socket == connectionInArray.socket){
+			return connectionInArray;
+		}
+	}
+	return null;
 }
 
 function removeConnection(connection){
@@ -266,7 +277,12 @@ function setupAnimal(client){
 	console.log('Start position ' + startPosition.x + ' ' + startPosition.y);
 	client.x = startPosition.x;
 	client.y = startPosition.y;
+	client.alive = true;
+	client.id = id;
+	id++;
 
-	var msg = { id: client.id, aid: client.animal, x: client.x, y: client.y}
+	client.timestamp = new Date().getTime();
+
+	var msg = { id: client.id, aid: client.animal, x: client.x, y: client.y }
 	sendDataToSocket(client.socket, 'setup', msg);
 }

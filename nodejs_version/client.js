@@ -11,13 +11,15 @@ var canvasStage;
 //SpriteSheets
 var lionSpriteSheetImage;
 var antilopeSpriteSheetImage;
-var treeImage;
+var objectsSpriteSheetImage;
 var grassImage;
 var logoImage;
 var pressanyImage;
+var treeImage;
 
 var lionSpriteSheet;
 var antilopeSpriteSheet;
+var objectsSpriteSheet;
 
 var playerSprite;
 
@@ -30,8 +32,8 @@ var scale = 0.5;
 
 //Game variables.
 var animalID;
-var x;
-var y;
+var x = 0;
+var y = 0;
 var ID;
 var vx;
 var vy;
@@ -43,13 +45,17 @@ var backgroundContainer;
 var playerContainer;
 var guiContainer;
 
+var ingame = false;
+
+
+
 $(document).ready(function(){
 	var connectTo = 'http://'+location.host.substring(0,location.host.indexOf(':'));
 	console.log('Connecting to ' + connectTo);
 	socket = io.connect(connectTo);
 
 	socket.on("setup", function(data) {
-	  	console.log('Data: ' + data);
+	  	console.log(data);
 		animalID = data.aid;
 		ID = data.id;
 		x = data.x;
@@ -72,7 +78,19 @@ $(document).ready(function(){
 	canvasStage = new createjs.Stage(document.getElementById("gamescreen"));
 
 	setup();
+	var timeloaded = new Date().getTime();
+
 	
+	
+	$(document).bind('keyup',function(e){
+        //console.log('Time ' + timeloaded + "/" + (new Date().getTime()) + " = " + ());
+        if(!ingame && (new Date().getTime() - timeloaded) > 1000){
+        	console.log('sending spawn message');
+        	ingame = true;
+        	showLogo(false);
+        	sendDataToServer('spawn', '');
+        }
+    })
 });
 
 function sendDataToServer(trigger, data){
@@ -90,9 +108,10 @@ function setup(){
  	canvasStage.addChild(guiContainer);
 
 	loadImages();
+	createSpriteSheets();
 	createBackground();
 	createLogo();
-	createSpriteSheets(animalID);
+	
 	setupAnimations();
 	
 	canvas.addEventListener('mousemove', function(evt) {
@@ -147,6 +166,8 @@ function loadImages(){
 	lionSpriteSheetImage.src = 'lion.png';
 	antilopeSpriteSheetImage = new Image();
 	antilopeSpriteSheetImage.src = 'antilope.png';
+	objectsSpriteSheetImage = new Image();
+	objectsSpriteSheetImage.src = 'objects.png';
 
 	logoImage = new Image();
 	logoImage.src = 'logo.png';
@@ -157,10 +178,10 @@ function loadImages(){
   	//}
 }
 
-function createSpriteSheets(id){
+function createSpriteSheets(){
 	createLionSpriteSheet();
 	createAntilopeSpriteSheet();
-	
+	createObjectsSpriteSheet();
 }
 
 function createLionSpriteSheet(){
@@ -199,7 +220,16 @@ function createAntilopeSpriteSheet(){
       }
   });
   //antilopeSpriteSheet.img.gotoAndPlay("attack");
+}
 
+function createObjectsSpriteSheet(){
+	console.log('Creating objects ss');
+	objectsSpriteSheet = new createjs.SpriteSheet({
+      images: [objectsSpriteSheetImage], 
+      frames: [
+      	[0,0,256,256,0,128,128]
+      ]
+  });
 }
 
 function createSprite(spriteSheet){
@@ -216,6 +246,9 @@ function createBackground(){
 	
 	//background = new createjs.Rectangle(0, 0, canvas.width, canvas.height);
 	backgroundContainer.addChild(shape);
+
+	treeImage = objectsSpriteSheet.getFrame(0);
+	backgroundContainer.addChild(treeImage);
 }
 
 function createLogo(){
@@ -232,6 +265,10 @@ function createLogo(){
 	setTimeout(function() {
     	fade(pressany, 0, true, true);
 	}, 25);
+}
+
+function showLogo(show){
+	guiContainer.visible = show;
 }
 
 function fade(image, value, fadeIn, loop){
@@ -298,6 +335,12 @@ function die(data){
 	if(player){
 		player.vx = 0;
 		player.vy = 0;
+
+		if(data.id == ID){
+			console.log('We died :(');
+			ingame = false;
+			showLogo(true);
+		}
 	}
 }
 
@@ -372,6 +415,8 @@ function updateLocal(){
 		
 		//myplayer.sprite.x = 400;//canvas.width/2;
 		//myplayer.sprite.y = 240;//canvas.heigth/2;
+	}else{
+		return;
 	}
 	//console.log('player speed ' + myplayer.vx + ' ' + myplayer.vy);
 	for(var key in players){
@@ -384,7 +429,6 @@ function updateLocal(){
 				player.sprite.x = relativeX(absoluteX);
 				player.sprite.y = relativeY(absoluteY);	
 				*/
-				
 				player.sprite.x += myplayer.vx*10;
 				player.sprite.y += myplayer.vy*10;
 			}
