@@ -534,8 +534,8 @@ function die(data){
 			
 			
 			
-			//ingame = false;
-			//showLogo(true);
+			ingame = false;
+			showLogo(true);
 		}
 		//Create bloodstain.
 		var bloodSprite = createSprite(objectsSpriteSheet);
@@ -597,9 +597,9 @@ function updatePlayer(data){
 	
 	var catchUpX = diffX/3;
 	var catchUpY = diffY/3;
-	
-	//console.log("data.vx " + data.vx + " " + "data.vy" + data.vy + " catchUpX " + catchUpX + " catchUpY " + catchUpY);
 	*/
+	//console.log("data.vx " + data.vx + " " + "data.vy" + data.vy + " catchUpX " + catchUpX + " catchUpY " + catchUpY);
+	
 	players[id].vx = data.vx;
 	players[id].vy = data.vy;
 	
@@ -708,17 +708,6 @@ function updateLocal(){
 	}
 	
 	resetCamera(x, y);
-	/*
-	backgroundObjects.x += vx*10;
-	backgroundObjects.y += vy*10;
-	
-	playerContainer.x += vx*10;
-	playerContainer.y += vy*10;
-	
-	objectContainer.x += vx*10;
-	objectContainer.y += vy*10;
-	*/
-	
 }
 
 function relativeX(otherX){
