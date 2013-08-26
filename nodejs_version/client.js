@@ -39,9 +39,9 @@ var vy;
 var players = {};
 
 //Rendering
-var background;
+var backgroundContainer;
 var playerContainer;
-var mapContainer;
+var guiContainer;
 
 $(document).ready(function(){
 	var connectTo = 'http://'+location.host.substring(0,location.host.indexOf(':'));
@@ -81,6 +81,14 @@ function sendDataToServer(trigger, data){
 
 function setup(){
 	g = new createjs.Graphics();
+
+	backgroundContainer = new createjs.Container();
+	canvasStage.addChild(backgroundContainer);
+	playerContainer = new createjs.Container();
+	canvasStage.addChild(playerContainer);
+ 	guiContainer = new createjs.Container();
+ 	canvasStage.addChild(guiContainer);
+
 	loadImages();
 	createBackground();
 	createLogo();
@@ -207,19 +215,19 @@ function createBackground(){
 	shape.graphics.beginFill("#E0C31D").drawRect(0, 0, canvas.width, canvas.height);
 	
 	//background = new createjs.Rectangle(0, 0, canvas.width, canvas.height);
-	canvasStage.addChild(shape);
+	backgroundContainer.addChild(shape);
 }
 
 function createLogo(){
 	var bitmap = new createjs.Bitmap(logoImage);
 	bitmap.x = 400 - 512/2;
 	bitmap.y = 240 - 512/2 - 30;
-	canvasStage.addChild(bitmap);
+	guiContainer.addChild(bitmap);
 	var pressany = new createjs.Bitmap(pressanyImage);
 	pressany.x = 400 - 256/2;
 	pressany.y = 240 - 256/2 + 175;
 	pressany.alpha = 0;
-	canvasStage.addChild(pressany);
+	guiContainer.addChild(pressany);
 
 	setTimeout(function() {
     	fade(pressany, 0, true, true);
@@ -282,7 +290,7 @@ function createPlayer(player){
 	
 	player.sprite = sprite;
 	
-	canvasStage.addChild(sprite);
+	playerContainer.addChild(sprite);
 }
 
 function die(data){
