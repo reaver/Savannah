@@ -12,6 +12,9 @@ var canvasStage;
 var lionSpriteSheetImage;
 var antilopeSpriteSheetImage;
 var objectsSpriteSheetImage;
+var lionSpriteSheetImageColor;
+var antilopeSpriteSheetImageColor;
+var objectsSpriteSheetImageColor;
 var grassImage;
 var logoImage;
 var pressanyImage;
@@ -23,11 +26,15 @@ var loaded = 0;
 var lionSpriteSheet;
 var antilopeSpriteSheet;
 var objectsSpriteSheet;
+var lionSpriteSheetColor;
+var antilopeSpriteSheetColor;
+var objectsSpriteSheetColor;
 
 var playerSprite;
 
-var bmpLionAnimation;
-var bmpAntilopeAnimation;
+var newLionSprite;
+var newAntilopeSprite;
+var newObjectSprite;
 
 //SpriteSheet controlls.
 var imageSize = 128;
@@ -101,6 +108,7 @@ function connect(){
 		y = data.y;
 		vx = data.vx;
 		vy = data.vy;
+		selectSpriteSheets();
 	}.bind(this));
 	
 	socket.on("die", function(data) {
@@ -209,23 +217,44 @@ function tick() {
 
 function loadImages(){
 	lionSpriteSheetImage = new Image();
-	lionSpriteSheetImage.src = 'lion.png';
+	lionSpriteSheetImage.src = 'lion_bw.png';
 	numberOfImages++;
 	lionSpriteSheetImage.onload = function() {
     	preloadStatus();
   	};
+	
+	lionSpriteSheetImageColor = new Image();
+	lionSpriteSheetImageColor.src = 'lion.png';
+	numberOfImages++;
+	lionSpriteSheetImageColor.onload = function() {
+    	preloadStatus();
+  	};
 
   	antilopeSpriteSheetImage = new Image();
-	antilopeSpriteSheetImage.src = 'antilope.png';
+	antilopeSpriteSheetImage.src = 'antilope_bw.png';
 	numberOfImages++;
 	antilopeSpriteSheetImage.onload = function() {
     	preloadStatus();
   	};
 
+  	antilopeSpriteSheetImageColor = new Image();
+	antilopeSpriteSheetImageColor.src = 'antilope.png';
+	numberOfImages++;
+	antilopeSpriteSheetImageColor.onload = function() {
+    	preloadStatus();
+  	};
+	
   	objectsSpriteSheetImage = new Image();
-	objectsSpriteSheetImage.src = 'objects.png';
+	objectsSpriteSheetImage.src = 'objects_bw.png';
 	numberOfImages++;
 	objectsSpriteSheetImage.onload = function() {
+    	preloadStatus();
+  	};
+	
+  	objectsSpriteSheetImageColor = new Image();
+	objectsSpriteSheetImageColor.src = 'objects.png';
+	numberOfImages++;
+	objectsSpriteSheetImageColor.onload = function() {
     	preloadStatus();
   	};
 
@@ -276,9 +305,22 @@ function createLionSpriteSheet(){
           left: [0, 3, "left", 3],
           right: [4, 7, "right", 3],
           up: [8, 11, "up", 3],
-          down: [12, 15, "down", 3]
-          //water: [32, 33, "water", 30]
-      }
+          down: [12, 15, "down", 3],
+		  death: [16, 19, "death", 3]
+		}
+	});
+	lionSpriteSheetColor = new createjs.SpriteSheet({
+      // image to use
+      images: [lionSpriteSheetImageColor], 
+      // width, height & registration point of each sprite
+      frames: {width: 128, height: 128, regX: 64, regY: 64}, 
+      animations: {    
+          left: [0, 3, "left", 3],
+          right: [4, 7, "right", 3],
+          up: [8, 11, "up", 3],
+          down: [12, 15, "down", 3],
+		  death: [16, 19, "death", 3]
+    }
   });
   //lionSpriteSheet.img.gotoAndPlay("attack");
 
@@ -292,12 +334,26 @@ function createAntilopeSpriteSheet(){
       // width, height & registration point of each sprite
       frames: {width: 128, height: 128, regX: 64, regY: 64}, 
       animations: {    
-          run: [0, 0, "run", 10]
-          //attack: [8, 15, "attack", 5],
-          //idle: [16, 17, "idle", 50],
-          //die: [24, 31, "die", 10],
-          //water: [32, 33, "water", 30]
-      }
+          left: [0, 3, "left", 3],
+          right: [4, 7, "right", 3],
+          up: [8, 11, "up", 3],
+          down: [12, 15, "down", 3],
+		  death: [16, 19, "death", 3]
+    }
+	});
+	
+	antilopeSpriteSheetColor = new createjs.SpriteSheet({
+		// image to use
+		images: [antilopeSpriteSheetImageColor], 
+		// width, height & registration point of each sprite
+		frames: {width: 128, height: 128, regX: 64, regY: 64}, 
+		animations: {    
+		left: [0, 3, "left", 3],
+		right: [4, 7, "right", 3],
+		up: [8, 11, "up", 3],
+		down: [12, 15, "down", 3],
+		  death: [16, 19, "death", 3]
+  }
   });
   //antilopeSpriteSheet.img.gotoAndPlay("attack");
 }
@@ -305,6 +361,20 @@ function createAntilopeSpriteSheet(){
 function createObjectsSpriteSheet(){
 	objectsSpriteSheet = new createjs.SpriteSheet({
       images: [objectsSpriteSheetImage], 
+      frames: [
+      	[0,0,256,256, 0,128,128],
+		[384,128, 128, 128, 0, 64, 64],
+		[256,128, 128, 128, 0, 64, 64]
+      ],
+      animations: {
+      	tree: [0, 0, "tree", 30],
+		blood: [1,1, "blood", 30],
+		bush: [2,2, "bush", 30]
+      }
+	});
+	
+	objectsSpriteSheetColor = new createjs.SpriteSheet({
+      images: [objectsSpriteSheetImageColor], 
       frames: [
       	[0,0,256,256, 0,128,128],
 		[384,128, 128, 128, 0, 64, 64],
@@ -404,13 +474,12 @@ function createPlayer(player){
 	var sprite;
 	
 	if (player.animal == LIONID) {
-		sprite = createSprite(lionSpriteSheet);
+		sprite = createSprite(lionSpriteSheetColor);
 	}else{
-		sprite = createSprite(antilopeSpriteSheet);
+		sprite = createSprite(antilopeSpriteSheetColor);
 	}
 	
 	if (player.id == ID) {
-	
 		var x = canvas.width/2;
 		var y = canvas.height/2;
 		
@@ -445,6 +514,9 @@ function createPlayer(player){
 function die(data){
 	var player = players[data.id];
 	if(player){
+	
+		player.sprite.gotoAndPlay("death");
+		player.sprite.gotoAndStop(19);
 		player.vx = 0;
 		player.vy = 0;
 
@@ -454,8 +526,8 @@ function die(data){
 			
 			
 			
-			ingame = false;
-			showLogo(true);
+			//ingame = false;
+			//showLogo(true);
 		}
 		//Create bloodstain.
 		var bloodSprite = createSprite(objectsSpriteSheet);
@@ -465,7 +537,7 @@ function die(data){
 		bloodSprite.y = y;
 		bloodSprite.gotoAndPlay("blood");
 		backgroundObjects.addChild(bloodSprite);
-		myplayerContainer.removeChild(player.sprite);
+		//myplayerContainer.removeChild(player.sprite);
 		
 	}
 }
@@ -506,6 +578,9 @@ function updatePlayer(data){
 		players[player.id] = player;
 		createPlayer(player);
 	}
+	
+	//ChangeSprite based on playerState.
+	//player.sprite = selectSpriteSheet(players[id]);
 	
 	var localPosX = players[id].x;
 	var localPosY = players[id].y;
@@ -571,6 +646,19 @@ function animate(player){
 				
 			}
 		}
+}
+
+function selectSpriteSheets(){
+	if(animalID == LIONID){
+		newLionSprite = function() { return createSprite(lionSpriteSheetColor);};
+		newAntilopeSprite = function() { return createSprite(antilopeSpriteSheetColor);};
+		newObjectSprite = function() { return createSprite(objectSpriteSheet);};
+	}
+	else{
+		newLionSprite = function() { return createSprite(lionSpriteSheet);};
+		newAntilopeSprite = function() { return createSprite(antilopeSpriteSheetColor);};
+		newObjectSprite = function() {return createSprite(objectSpriteSheetColor);};
+	}
 }
 
 function updateLocal(){
