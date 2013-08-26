@@ -102,6 +102,9 @@ function connect(){
 		console.log('Setting start pos ' + x + ' ' + y);
 		vx = data.vx;
 		vy = data.vy;
+
+		resetCamera(x, y);
+
 	}.bind(this));
 	
 	socket.on("die", function(data) {
@@ -170,8 +173,8 @@ function setup(){
 			
 			var speedVect = {};
 			
-			speedVect.vx = -deltaX;
-			speedVect.vy = -deltaY;
+			speedVect.vx = deltaX;
+			speedVect.vy = deltaY;
 		
 			sendDataToServer("v", speedVect);
 		}
@@ -505,12 +508,14 @@ function updatePlayer(data){
 			id: data.id,
 			animal: data.animal,
 			x: data.x,
-			y: data.y
+			y: data.y, 
+			vx: 0,
+			vy: 0
 		}
 		players[player.id] = player;
 		createPlayer(player);
 	}
-	
+	/*
 	var localPosX = players[id].x;
 	var localPosY = players[id].y;
 	
@@ -521,19 +526,22 @@ function updatePlayer(data){
 	var catchUpY = diffY/3;
 	
 	//console.log("data.vx " + data.vx + " " + "data.vy" + data.vy + " catchUpX " + catchUpX + " catchUpY " + catchUpY);
+	*/
 	players[id].vx = data.vx;
 	players[id].vy = data.vy;
 	
-	//players[id].x += data.vx*10;
-	//players[id].y += data.vy*10;
+	
+	players[id].x += data.x;
+	players[id].y += data.y;
 	
 	//Update sprite position.
-	players[id].sprite.x = players[id].x;
-	players[id].sprite.y = players[id].y;
+	players[id].sprite.x = relativeX(players[id].x);
+	players[id].sprite.y = relativeY(players[id].y);
 	
 	if(id == ID){
 		x = data.x;
 		y = data.y;
+		resetCamera(x, y);
 		console.log('Updating start pos ' + x + ' ' + y);
 		players[id].sprite.x = 400;//canvas.width/2;
 		players[id].sprite.y = 240;//canvas.heigth/2;
@@ -555,23 +563,23 @@ function animate(player){
 	var vy = player.vy;
 	if(Math.abs(vx) > Math.abs(vy)){
 			if(vx > 0){
-				if(player.sprite.currentAnimation !== 'left'){
-					player.sprite.gotoAndPlay('left');
-				}
-			}else{
 				if(player.sprite.currentAnimation !== 'right'){
 					player.sprite.gotoAndPlay('right');
+				}
+			}else{
+				if(player.sprite.currentAnimation !== 'left'){
+					player.sprite.gotoAndPlay('left');
 				}
 			}
 		}else{
 			if(vy > 0){
-				if(player.sprite.currentAnimation !== 'up'){
-					player.sprite.gotoAndPlay('up');
+				if(player.sprite.currentAnimation !== 'down'){
+					player.sprite.gotoAndPlay('down');
 				}
 				
 			}else{
-				if(player.sprite.currentAnimation !== 'down'){
-					player.sprite.gotoAndPlay('down');
+				if(player.sprite.currentAnimation !== 'up'){
+					player.sprite.gotoAndPlay('up');
 				}
 				
 			}
@@ -580,17 +588,18 @@ function animate(player){
 
 function updateLocal(){
 	var myplayer = players[ID];
+	var vx = 0;
+	var vy = 0;
+
 	if (myplayer) {
-		var vx = myplayer.vx;
-		var vy = myplayer.vy;
+		vx = myplayer.vx;
+		vy = myplayer.vy;
 		animate(myplayer);
-		//x = x + myplayer.vx*10;
-		//y = y + myplayer.vy*10;
-		
+		x = x + myplayer.vx*10;
+		y = y + myplayer.vy*10;
+		//console.log('new xy '+ x + ' ' + y);
 		//myplayer.sprite.x = 400;//canvas.width/2;
 		//myplayer.sprite.y = 240;//canvas.heigth/2;
-	}else{
-		return;
 	}
 	//console.log('player speed ' + myplayer.vx + ' ' + myplayer.vy);
 	for(var key in players){
@@ -612,14 +621,17 @@ function updateLocal(){
 		}
 	}
 	
-	backgroundObjects.x += myplayer.vx*10;
-	backgroundObjects.y += myplayer.vy*10;
+	resetCamera(x, y);
+	/*
+	backgroundObjects.x += vx*10;
+	backgroundObjects.y += vy*10;
 	
-	playerContainer.x += myplayer.vx*10;
-	playerContainer.y += myplayer.vy*10;
+	playerContainer.x += vx*10;
+	playerContainer.y += vy*10;
 	
-	objectContainer.x += myplayer.vx*10;
-	objectContainer.y += myplayer.vy*10;
+	objectContainer.x += vx*10;
+	objectContainer.y += vy*10;
+	*/
 	
 }
 
@@ -629,4 +641,16 @@ function relativeX(otherX){
 
 function relativeY(otherY){
 	return canvas.height/2 + (y - otherY);
+}
+
+function resetCamera(x, y){
+
+	backgroundObjects.x = -x + canvas.width/2;
+	backgroundObjects.y = -y + canvas.height/2;
+	
+	playerContainer.x = -x + canvas.width/2;
+	playerContainer.y = -y + canvas.height/2;
+	
+	objectContainer.x = -x + canvas.width/2;
+	objectContainer.y = -y + canvas.height/2;
 }
