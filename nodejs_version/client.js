@@ -99,6 +99,7 @@ function connect(){
 		ID = data.id;
 		x = data.x;
 		y = data.y;
+		console.log('Setting start pos ' + x + ' ' + y);
 		vx = data.vx;
 		vy = data.vy;
 	}.bind(this));
@@ -411,11 +412,10 @@ function createPlayer(player){
 	
 	if (player.id == ID) {
 	
-		var x = canvas.width/2;
-		var y = canvas.height/2;
-		
-		sprite.x = x;
-		sprite.y = y;
+		player.posX = player.x;
+		player.posY = player.y;
+		sprite.x = canvas.width/2;
+		sprite.y = canvas.height/2;
 		
 		sprite.scaleX = scale;
 		sprite.scaleY = scale;
@@ -428,8 +428,12 @@ function createPlayer(player){
 		myplayerContainer.addChild(sprite);
 	}
 	else{
-		sprite.x = player.x;
-		sprite.y = player.y;
+
+		player.posX = player.x;
+		player.posY = player.y;
+
+		sprite.x = relativeX(player.posX);
+		sprite.y = relativeY(player.posY);
 		
 		sprite.scaleX = scale;
 		sprite.scaleY = scale;
@@ -498,10 +502,10 @@ function updatePlayer(data){
 	if (!players[id]){
 	
 		var player = {
-			id:data.id,
-			animal:data.animal,
-			x:relativeX(data.x),
-			y:relativeY(data.y)
+			id: data.id,
+			animal: data.animal,
+			x: data.x,
+			y: data.y
 		}
 		players[player.id] = player;
 		createPlayer(player);
@@ -528,8 +532,9 @@ function updatePlayer(data){
 	players[id].sprite.y = players[id].y;
 	
 	if(id == ID){
-		//x = data.x;
-		//y = data.y;
+		x = data.x;
+		y = data.y;
+		console.log('Updating start pos ' + x + ' ' + y);
 		players[id].sprite.x = 400;//canvas.width/2;
 		players[id].sprite.y = 240;//canvas.heigth/2;
 	}
