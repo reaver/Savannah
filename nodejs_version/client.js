@@ -8,7 +8,7 @@ var canvas;
 var canvasContext;
 var canvasStage;
 
-//SpriteSheets
+//Images
 var lionSpriteSheetImage;
 var antilopeSpriteSheetImage;
 var objectsSpriteSheetImage;
@@ -16,6 +16,9 @@ var grassImage;
 var logoImage;
 var pressanyImage;
 var treeImage;
+
+var numberOfImages = 0;
+var loaded = 0;
 
 var lionSpriteSheet;
 var antilopeSpriteSheet;
@@ -46,12 +49,33 @@ var playerContainer;
 var guiContainer;
 
 var ingame = false;
-
-
+var timeloaded;
 
 $(document).ready(function(){
+	
+	canvas = document.getElementById('gamescreen');
+	canvasContext = canvas.getContext("2d");
+	canvasStage = new createjs.Stage(document.getElementById("gamescreen"));
+
+	setup();
+	console.log('setup done');
+	
+	$(document).bind('keyup',function(e){
+        //console.log('Time ' + timeloaded + "/" + (new Date().getTime()) + " = " + ());
+        if(!ingame && (new Date().getTime() - timeloaded) > 1000){
+        	console.log('sending spawn message');
+        	ingame = true;
+        	showLogo(false);
+        	sendDataToServer('spawn', '');
+        }
+    })
+
+});
+
+function connect(){
 	var connectTo = 'http://'+location.host.substring(0,location.host.indexOf(':'));
 	console.log('Connecting to ' + connectTo);
+
 	socket = io.connect(connectTo);
 
 	socket.on("setup", function(data) {
@@ -72,26 +96,7 @@ $(document).ready(function(){
 	socket.on("u", function(data) {
 		update(data);
 	}.bind(this));
-	
-	canvas = document.getElementById('gamescreen');
-	canvasContext = canvas.getContext("2d");
-	canvasStage = new createjs.Stage(document.getElementById("gamescreen"));
-
-	setup();
-	var timeloaded = new Date().getTime();
-
-	
-	
-	$(document).bind('keyup',function(e){
-        //console.log('Time ' + timeloaded + "/" + (new Date().getTime()) + " = " + ());
-        if(!ingame && (new Date().getTime() - timeloaded) > 1000){
-        	console.log('sending spawn message');
-        	ingame = true;
-        	showLogo(false);
-        	sendDataToServer('spawn', '');
-        }
-    })
-});
+}
 
 function sendDataToServer(trigger, data){
 	socket.emit(trigger, data);
@@ -108,11 +113,6 @@ function setup(){
  	canvasStage.addChild(guiContainer);
 
 	loadImages();
-	createSpriteSheets();
-	createBackground();
-	createLogo();
-	
-	setupAnimations();
 	
 	canvas.addEventListener('mousemove', function(evt) {
         var mousePos = getMousePos(canvas, evt);
@@ -133,6 +133,7 @@ function setup(){
 		sendDataToServer("v", speedVect);
 		
     }, false);
+    
 	
 	//createPlayer();
 }
@@ -164,18 +165,70 @@ function tick() {
 function loadImages(){
 	lionSpriteSheetImage = new Image();
 	lionSpriteSheetImage.src = 'lion.png';
-	antilopeSpriteSheetImage = new Image();
-	antilopeSpriteSheetImage.src = 'antilope.png';
-	objectsSpriteSheetImage = new Image();
-	objectsSpriteSheetImage.src = 'objects.png';
+	numberOfImages++;
+	lionSpriteSheetImage.onload = function() {
+    	console.log(lionSpriteSheetImage);
+    	preloadStatus();
+  	};
 
-	logoImage = new Image();
+  	antilopeSpriteSheetImage = new Image();
+	antilopeSpriteSheetImage.src = 'antilope.png';
+	numberOfImages++;
+	antilopeSpriteSheetImage.onload = function() {
+    	console.log(lionSpriteSheetImage);
+    	preloadStatus();
+  	};
+
+  	objectsSpriteSheetImage = new Image();
+	objectsSpriteSheetImage.src = 'objects.png';
+	numberOfImages++;
+	objectsSpriteSheetImage.onload = function() {
+    	console.log(objectsSpriteSheetImage);
+    	preloadStatus();
+  	};
+
+  	logoImage = new Image();
 	logoImage.src = 'logo.png';
-	pressanyImage = new Image();
+	numberOfImages++;
+	logoImage.onload = function() {
+    	console.log(logoImage);
+    	preloadStatus();
+  	};
+
+  	pressanyImage = new Image();
 	pressanyImage.src = 'pressanykey.png';
-	//lionSpriteSheet.image.onload = function(){
-    //	console.log('Loaded lionSpriteSheet');
-  	//}
+	numberOfImages++;
+	pressanyImage.onload = function() {
+    	console.log(pressanyImage);
+    	preloadStatus();
+  	};
+}
+
+function loadImage(img, source){
+	console.log('loading ' + source);
+	img = new Image();
+	img.src = source;
+	numberOfImages++;
+	img.onload = function() {
+    	console.log(img);
+    	preloadStatus();
+  	};
+	return img;
+}
+
+function preloadStatus(){
+	loaded++;
+	console.log('done loading image ' + loaded + '/' + numberOfImages);
+	if(loaded == numberOfImages){
+		console.log('Done loading!');
+		createSpriteSheets();
+		createBackground();
+		createLogo();
+		
+		setupAnimations();
+		timeloaded = new Date().getTime();
+		connect();
+	}
 }
 
 function createSpriteSheets(){
@@ -186,6 +239,7 @@ function createSpriteSheets(){
 
 function createLionSpriteSheet(){
 	//example code:
+	console.log('lion pre');
 	lionSpriteSheet = new createjs.SpriteSheet({
       // image to use
       images: [lionSpriteSheetImage], 
@@ -199,7 +253,7 @@ function createLionSpriteSheet(){
           //water: [32, 33, "water", 30]
       }
   });
-  
+  console.log('lion post');
   //lionSpriteSheet.img.gotoAndPlay("attack");
 
 }
@@ -227,8 +281,9 @@ function createObjectsSpriteSheet(){
 	objectsSpriteSheet = new createjs.SpriteSheet({
       images: [objectsSpriteSheetImage], 
       frames: [
-      	[0,0,256,256,0,128,128]
-      ]
+      	[0,0,256,256,128,128]
+      ],
+      animations: {}
   });
 }
 
@@ -248,7 +303,7 @@ function createBackground(){
 	backgroundContainer.addChild(shape);
 
 	treeImage = objectsSpriteSheet.getFrame(0);
-	backgroundContainer.addChild(treeImage);
+	//backgroundContainer.addChild(treeImage);
 }
 
 function createLogo(){
@@ -256,6 +311,8 @@ function createLogo(){
 	bitmap.x = 400 - 512/2;
 	bitmap.y = 240 - 512/2 - 30;
 	guiContainer.addChild(bitmap);
+	var frame = objectsSpriteSheet.getFrame(0);
+	console.log(frame);
 	var pressany = new createjs.Bitmap(pressanyImage);
 	pressany.x = 400 - 256/2;
 	pressany.y = 240 - 256/2 + 175;
