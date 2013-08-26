@@ -1,9 +1,17 @@
+var map = require('./map.json');
 var express = require('express')
 	, app = express()
 	, server = require('http').createServer(app)
 	, io = require('socket.io').listen(server, { log: false });	
 
 var port = 8080;
+
+
+
+for(var i = 0; i < map.length; i++){
+	var object = map[i];
+	console.log('parsing map: ' + object.type);
+}
 
 var connections = [];
 var numberOfLions = 0;
