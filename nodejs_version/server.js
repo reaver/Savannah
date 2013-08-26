@@ -8,14 +8,13 @@ var port = 8080;
 
 
 
-for(var i = 0; i < map.length; i++){
-	var object = map[i];
-	console.log('parsing map: ' + object.type);
-}
 
 var connections = [];
+var grass = [];
 var numberOfLions = 0;
 var numberOfAntilopes = 0;
+
+
 
 var LION_ID = 0;
 var ANTILOPE_ID = 1;
@@ -26,6 +25,7 @@ var size = 128 * imageScale;
 
 server.listen(port);
 console.log('Listening on port ' + port);
+readMap();
 
 app.configure(function() {
   app.use(express.static(__dirname + '/'));
@@ -65,12 +65,24 @@ function sendDataToSocket(socket, keyword, data){
 	socket.emit(keyword, data);
 }
 
+function readMap(){
+	for(var i = 0; i < map.length; i++){
+		var def = map[i];
+		if(def.type === "bush"){
+			//redundant? YES!
+			var bush = {x:def.x, y:def.y};
+			console.log(def.x + " " + def.y);
+			grass.push(bush);
+		}
+	}
+}
+
 function addConnection(connection){
 	var client = {
 		socket: connection,
 		id: 0,
 		animal: LION_ID, //Default lion
-		alive: true,
+		alive: false,
 		timestamp: new Date().getTime(),
 		x: 0,
 		y: 0,
@@ -119,7 +131,7 @@ function updateGameLogic(){
 		var client = connections[i];
 		if(client){
 			if(client.alive){
-				var lifeleft = (client.timestamp + 10 * 1000) - currentTime;
+				var lifeleft = (client.timestamp + 10 * 10000) - currentTime;
 				//console.log('Life left ' + lifeleft);
 				if(lifeleft <= 0){
 					//Die!
@@ -139,6 +151,7 @@ function updateGameLogic(){
 			clientTwo = connections[j];
 			checkCollision(clientOne, clientTwo);
 		}
+		checkAntilopeFoodCollision(clientOne);
 	}
 }
 
@@ -196,22 +209,48 @@ function kill(client){
 	client.vx = 0;
 	client.vy = 0;
 	var diemsg = { id: client.id, source:0};
-	sendDataToSocket(client.socket, 'die', diemsg);
+	//sendDataToSocket(client.socket, 'die', diemsg);
 	if(client.animal == LION_ID){
 		numberOfLions--;
 	}else if(client.animal == ANTILOPE_ID){
 		numberOfAntilopes--;
 	}
+
+	for(var i = 0; i < connections.length; i++){
+		var tmpclient = connections[i];
+		if(tmpclient){
+			sendDataToSocket(tmpclient.socket, 'die', diemsg);
+		}
+	}
 }
 
 function feed(client){
 	client.feed = true;
-	sendDataToSocket(client.socket, 'feed', 'yumyum');
+	
+	var feedmsg = {id: client.id};
+
+	for(var i = 0; i < connections.length; i++){
+		var tmpclient = connections[i];
+		if(tmpclient){
+			sendDataToSocket(tmpclient.socket, 'feed', feedmsg);
+		}
+	}
 }
 
 function mate(clientOne, clientTwo){
-	//Setup new animal
-	//Kill old one
+	clientOne.mate = true;
+	clientTwo.mate = true;
+	
+	var matemsg1 = {id: clientOne.id};
+	var matemsg2 = {id: clientTwo.id};
+
+	for(var i = 0; i < connections.length; i++){
+		var client = connections[i];
+		if(client){
+			sendDataToSocket(client.socket, 'mate', matemsg1);
+			sendDataToSocket(client.socket, 'mate', matemsg2);
+		}
+	}
 }
 
 function updatePosition(client){
@@ -249,8 +288,19 @@ function checkCollision(clientOne, clientTwo){
 	}
 }
 
+function checkAntilopeFoodCollision(client){
+	if(client.animal == ANTILOPE_ID){
+		for(var j = 0; j < grass.length; j++){
+			if(collides(client, grass[j])){
+				//console.log("Collide");
+				feed(client);
+			}
+		}
+	}
+}
+
 function collides(clientOne, clientTwo){
-	if(clientTwo.x - (size / 2) < clientOne.x + (size / 2) && clientTwo.x + (size / 2) > clientOne.x - (size / 2)){
+	if((clientTwo.x - (size / 2)) < clientOne.x + (size / 2) && clientTwo.x + (size / 2) > clientOne.x - (size / 2)){
         if(clientTwo.y - (size / 2) < clientOne.y + (size / 2) && clientTwo.y + (size / 2) > clientOne.y - (size / 2)){
           	return true;
     	}
@@ -268,7 +318,7 @@ function setupAnimal(client){
 		var randomNumber = Math.random();
 		if(randomNumber < 0.5){
 			//Lion!
-			client.animal = LION_ID;
+			client.animal = ANTILOPE_ID;
 			numberOfLions++;
 		}else{
 			//Antilope!
@@ -277,7 +327,7 @@ function setupAnimal(client){
 		}
 	}else if(numberOfLions < numberOfAntilopes){
 		//Lion!
-		client.animal = LION_ID;
+		client.animal = ANTILOPE_ID;
 		numberOfLions++;
 	}else if(numberOfLions > numberOfAntilopes){
 		//Antilope!

@@ -41,12 +41,15 @@ var ID;
 var vx;
 var vy;
 
+var fed;
+
 var players = {};
-var objects = [];
 
 //Rendering
 var backgroundContainer;
+var backgroundObjects;
 var playerContainer;
+var myplayerContainer;
 var objectContainer;
 var guiContainer;
 
@@ -105,6 +108,16 @@ function connect(){
 		die(data);
 	}.bind(this));
 	
+	socket.on("feed", function(data) {
+	  	console.log('Data: ' + data);
+		feed(data);
+	}.bind(this));
+	
+	socket.on("mate", function(data) {
+	  	console.log('Data: ' + data);
+		mate(data);
+	}.bind(this));
+	
 	socket.on("u", function(data) {
 		update(data);
 	}.bind(this));
@@ -119,8 +132,12 @@ function setup(){
 
 	backgroundContainer = new createjs.Container();
 	canvasStage.addChild(backgroundContainer);
+	backgroundObjects = new createjs.Container();
+	canvasStage.addChild(backgroundObjects);
 	playerContainer = new createjs.Container();
 	canvasStage.addChild(playerContainer);
+	myplayerContainer = new createjs.Container();
+	canvasStage.addChild(myplayerContainer);
 	objectContainer = new createjs.Container();
 	canvasStage.addChild(objectContainer);
  	guiContainer = new createjs.Container();
@@ -169,9 +186,6 @@ function getMousePos(canvas, evt) {
 	  x: evt.clientX - rect.left,
 	  y: evt.clientY - rect.top
 	};
-}
-
-function mouseButtonToggle(){
 }
 
 
@@ -292,10 +306,14 @@ function createObjectsSpriteSheet(){
 	objectsSpriteSheet = new createjs.SpriteSheet({
       images: [objectsSpriteSheetImage], 
       frames: [
-      	[0,0,256,256, 0,128,128]
+      	[0,0,256,256, 0,128,128],
+		[384,128, 128, 128, 0, 64, 64],
+		[256,128, 128, 128, 0, 64, 64]
       ],
       animations: {
-      	tree: [0, 0, "tree", 30]
+      	tree: [0, 0, "tree", 30],
+		blood: [1,1, "blood", 30],
+		bush: [2,2, "bush", 30]
       }
   });
 }
@@ -324,8 +342,12 @@ function loadMap(){
 			tree.gotoAndPlay(def.type);
 			tree.x = def.x;
 			tree.y = def.y;
-			objectContainer.addChild(tree);
-			objects.push(tree);
+			if (def.type !== "bush"){
+				objectContainer.addChild(tree);
+			}else{
+				backgroundObjects.addChild(tree);
+				console.log(tree.x + " " + tree.y);
+			}	
 		}
 	}
 }
@@ -394,21 +416,30 @@ function createPlayer(player){
 		
 		sprite.x = x;
 		sprite.y = y;
+		
+		sprite.scaleX = scale;
+		sprite.scaleY = scale;
+		
+		sprite.gotoAndPlay("run")
+		
+		player.sprite = sprite;
 	
 		playerSprite = sprite;
+		myplayerContainer.addChild(sprite);
 	}
 	else{
 		sprite.x = player.x;
 		sprite.y = player.y;
+		
+		sprite.scaleX = scale;
+		sprite.scaleY = scale;
+		
+		sprite.gotoAndPlay("run")
+		
+		player.sprite = sprite;
+		playerContainer.addChild(sprite);
+	
 	}
-	sprite.scaleX = scale;
-	sprite.scaleY = scale;
-	
-	sprite.gotoAndPlay("run")
-	
-	player.sprite = sprite;
-	
-	playerContainer.addChild(sprite);
 }
 
 function die(data){
@@ -419,8 +450,44 @@ function die(data){
 
 		if(data.id == ID){
 			console.log('We died :(');
+			
+			
+			
+			
 			ingame = false;
 			showLogo(true);
+		}
+		//Create bloodstain.
+		var bloodSprite = createSprite(objectsSpriteSheet);
+		var x = -backgroundObjects.x + canvas.width/2;
+		var y = -backgroundObjects.y + canvas.height/2;
+		bloodSprite.x = x;
+		bloodSprite.y = y;
+		bloodSprite.gotoAndPlay("blood");
+		backgroundObjects.addChild(bloodSprite);
+		myplayerContainer.removeChild(player.sprite);
+		
+	}
+}
+
+function feed(data){
+	var player = players[data.id];
+	if(player){
+		player.feed = true;
+
+		if(data.id == ID){
+			console.log('We ate! :)');	
+		}
+	}
+}
+
+function mate(data){
+	var player = players[data.id];
+	if(player){
+		player.mated = true;
+
+		if(data.id == ID){
+			console.log('We mated! :)');	
 		}
 	}
 }
@@ -529,23 +596,26 @@ function updateLocal(){
 				var absoluteX = (x + player.sprite.x) + player.vx*10;
 				var absoluteY = (y + player.sprite.y) + player.vy*10;
 				player.sprite.x = relativeX(absoluteX);
-				player.sprite.y = relativeY(absoluteY);	
+				player.sprite.y = relativeY(absoluteY);
 				*/
-				player.x += myplayer.vx*10 + player.vx*10;
-				player.y += myplayer.vy*10 + player.vy*10 ;
+				player.x += (player.vx*10);
+				player.y += (player.vy*10);
 				animate(player);
 				player.sprite.x = player.x;
 				player.sprite.y = player.y;
 			}
 		}
 	}
-	for(var i = 0; i < objects.length; i++){
-		var object = objects[i];
-		if(object){
-			object.x += myplayer.vx*10; 
-			object.y += myplayer.vy*10;
-		}
-	}
+	
+	backgroundObjects.x += myplayer.vx*10;
+	backgroundObjects.y += myplayer.vy*10;
+	
+	playerContainer.x += myplayer.vx*10;
+	playerContainer.y += myplayer.vy*10;
+	
+	objectContainer.x += myplayer.vx*10;
+	objectContainer.y += myplayer.vy*10;
+	
 }
 
 function relativeX(otherX){
