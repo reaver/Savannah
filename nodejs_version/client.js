@@ -217,7 +217,7 @@ function createLogo(){
 	canvasStage.addChild(bitmap);
 	var pressany = new createjs.Bitmap(pressanyImage);
 	pressany.x = 400 - 256/2;
-	pressany.y = 240 - 256/2;
+	pressany.y = 240 - 256/2 + 175;
 	canvasStage.addChild(pressany);
 }
 
