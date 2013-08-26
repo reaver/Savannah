@@ -135,6 +135,7 @@ function setup(){
 	
 	$(document).bind('mouseup', function mouseUp(evt){
 		mouseIsDown = false;
+		sendDataToServer("v", {vx:0, vy:0});
 		console.log("Mouse up " + evt);
 	}, false);
 	
@@ -309,7 +310,7 @@ function createBackground(){
 	//g.beginFill(createjs.Graphics.getRGB(224,195,29));
 	
 	var shape = new createjs.Shape();
-	shape.graphics.beginFill("#E0C31D").drawRect(0, 0, canvas.width, canvas.height);
+	shape.graphics.beginFill("#E7E7E7").drawRect(0, 0, canvas.width, canvas.height);
 	
 	//background = new createjs.Rectangle(0, 0, canvas.width, canvas.height);
 	backgroundContainer.addChild(shape);
