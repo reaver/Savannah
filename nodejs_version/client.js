@@ -439,34 +439,40 @@ function update(data){
 	}
 }
 
+function animate(player){
+	var vx = player.vx;
+	var vy = player.vy;
+	if(Math.abs(vx) > Math.abs(vy)){
+			if(vx > 0){
+				if(player.sprite.currentAnimation !== 'left'){
+					player.sprite.gotoAndPlay('left');
+				}
+			}else{
+				if(player.sprite.currentAnimation !== 'right'){
+					player.sprite.gotoAndPlay('right');
+				}
+			}
+		}else{
+			if(vy > 0){
+				if(player.sprite.currentAnimation !== 'up'){
+					player.sprite.gotoAndPlay('up');
+				}
+				
+			}else{
+				if(player.sprite.currentAnimation !== 'down'){
+					player.sprite.gotoAndPlay('down');
+				}
+				
+			}
+		}
+}
+
 function updateLocal(){
 	var myplayer = players[ID];
 	if (myplayer) {
 		var vx = myplayer.vx;
 		var vy = myplayer.vy;
-		if(Math.abs(vx) > Math.abs(vy)){
-			if(vx > 0){
-				if(myplayer.sprite.currentAnimation !== 'left'){
-					myplayer.sprite.gotoAndPlay('left');
-				}
-			}else{
-				if(myplayer.sprite.currentAnimation !== 'right'){
-					myplayer.sprite.gotoAndPlay('right');
-				}
-			}
-		}else{
-			if(vy > 0){
-				if(myplayer.sprite.currentAnimation !== 'up'){
-					myplayer.sprite.gotoAndPlay('up');
-				}
-				
-			}else{
-				if(myplayer.sprite.currentAnimation !== 'down'){
-					myplayer.sprite.gotoAndPlay('down');
-				}
-				
-			}
-		}
+		animate(myplayer);
 		//x = x + myplayer.vx*10;
 		//y = y + myplayer.vy*10;
 		
@@ -488,6 +494,7 @@ function updateLocal(){
 				*/
 				player.sprite.x += myplayer.vx*10;
 				player.sprite.y += myplayer.vy*10;
+				animate(player);
 			}
 		}
 	}
