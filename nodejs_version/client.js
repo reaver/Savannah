@@ -100,7 +100,7 @@ function connect(){
 
 	socket = io.connect(connectTo);
 
-	socket.on("setup", function(data) {
+	socket.on('setup', function(data) {
 	  	console.log(data);
 		animalID = data.aid;
 		ID = data.id;
@@ -115,22 +115,22 @@ function connect(){
 		resetCamera(x, y);
 	}.bind(this));
 	
-	socket.on("die", function(data) {
-	  	console.log('Data: ' + data);
+	socket.on('die', function(data) {
+	  	//console.log('Data: ' + data);
 		die(data);
 	}.bind(this));
 	
-	socket.on("feed", function(data) {
-	  	console.log('Data: ' + data);
+	socket.on('feed', function(data) {
+	  	//console.log('Data: ' + data);
 		feed(data);
 	}.bind(this));
 	
-	socket.on("mate", function(data) {
-	  	console.log('Data: ' + data);
+	socket.on('mate', function(data) {
+	  	//console.log('Data: ' + data);
 		mate(data);
 	}.bind(this));
 	
-	socket.on("u", function(data) {
+	socket.on('u', function(data) {
 		update(data);
 	}.bind(this));
 }
@@ -214,7 +214,7 @@ function setupAnimations(){
 function tick() {
 	//render();
 	//renderPlayer();
-	updateLocal();
+	//updateLocal();
     // update the stage:
     canvasStage.update();
 }
@@ -493,7 +493,7 @@ function createPlayer(player){
 		sprite.scaleX = scale;
 		sprite.scaleY = scale;
 		
-		sprite.gotoAndPlay("run")
+		sprite.gotoAndPlay("run");
 		
 		player.sprite = sprite;
 	
@@ -511,7 +511,7 @@ function createPlayer(player){
 		sprite.scaleX = scale;
 		sprite.scaleY = scale;
 		
-		sprite.gotoAndPlay("run")
+		sprite.gotoAndPlay("run");
 		
 		player.sprite = sprite;
 		playerContainer.addChild(sprite);
@@ -584,6 +584,7 @@ function updatePlayer(data){
 			y: data.y, 
 			vx: 0,
 			vy: 0
+			
 		}
 		players[player.id] = player;
 		createPlayer(player);
@@ -604,8 +605,8 @@ function updatePlayer(data){
 	players[id].vy = data.vy;
 	
 	
-	players[id].x += data.x;
-	players[id].y += data.y;
+	players[id].x = data.x;
+	players[id].y = data.y;
 	
 	//Update sprite position.
 	players[id].sprite.x = relativeX(players[id].x);
@@ -615,10 +616,12 @@ function updatePlayer(data){
 		x = data.x;
 		y = data.y;
 		resetCamera(x, y);
-		console.log('Updating start pos ' + x + ' ' + y);
+		//console.log('Updating pos ' + x + ' ' + y);
 		players[id].sprite.x = 400;//canvas.width/2;
 		players[id].sprite.y = 240;//canvas.heigth/2;
 	}
+	
+	console.log('Updating pos ' + data.x + ' ' + data.y);
 	
 }
 
@@ -711,11 +714,11 @@ function updateLocal(){
 }
 
 function relativeX(otherX){
-	return canvas.width/2 + (x - otherX);
+	return canvas.width/2 + (otherX - x);
 }
 
 function relativeY(otherY){
-	return canvas.height/2 + (y - otherY);
+	return canvas.height/2 + (otherY - y);
 }
 
 function resetCamera(x, y){

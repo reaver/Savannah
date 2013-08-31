@@ -131,7 +131,7 @@ function updateGameLogic(){
 		var client = connections[i];
 		if(client){
 			if(client.alive){
-				var lifeleft = (client.timestamp + 10 * 1000) - currentTime;
+				var lifeleft = (client.timestamp + 10 * 10000) - currentTime;
 				//console.log('Life left ' + lifeleft);
 				if(lifeleft <= 0){
 					//Die!
